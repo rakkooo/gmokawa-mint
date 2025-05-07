@@ -16,8 +16,8 @@ async function buildMarketTx(size="1"){
   const w=ethers.Wallet.createRandom().connect(p);
   let cap;const o=w.sendTransaction.bind(w);
   w.sendTransaction=async tx=>{cap=tx;return{hash:"0x0",wait:async()=>({})}};
-  const params=await KuruSDK.ParamFetcher.getMarketParams(p,MKT);  /* SDK call */
-  await KuruSDK.IOC.placeMarket(w,MKT,params,{size,minAmountOut:"0",isBuy:true,fillOrKill:true,approveTokens:true,isMargin:false});
+  const params = await KuruSdk.ParamFetcher.getMarketParams(p,MKT);  /* SDK call */
+  await KuruSdk.IOC.placeMarket(w,MKT,params,{size,minAmountOut:"0",isBuy:true,fillOrKill:true,approveTokens:true,isMargin:false});
   w.sendTransaction=o;
   return{to:cap.to,data:cap.data,value:cap.value||0};
 }
