@@ -13,10 +13,10 @@ jobs:
       with: { node-version: '18' }
 
     - run: |
-        npm install @kuru-labs/kuru-sdk@latest esbuild        # 最新 SDK を取得 :contentReference[oaicite:1]{index=1}
+        npm install @kuru-labs/kuru-sdk@latest esbuild
         npx esbuild node_modules/@kuru-labs/kuru-sdk/dist/index.js \
           --bundle --format=iife --global-name=KuruSdk \
-          --minify --outfile=docs/kuru-sdk.browser.js         # IIFE+グローバル :contentReference[oaicite:2]{index=2}
+          --minify --outfile=docs/kuru-sdk.browser.js
 
     - name: Commit bundle
       run: |
