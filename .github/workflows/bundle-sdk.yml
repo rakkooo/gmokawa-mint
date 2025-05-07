@@ -13,7 +13,7 @@ jobs:
       run: |
         npm install @kuru-labs/kuru-sdk@latest esbuild@latest
         # data と value のプレースホルダを追加 (SDKがこれらを上書きすることを期待)
-        echo "export default () => ({to:'0x116a9f35a402a2d34457bd72026c7f722d9d6333', data: '0x', value: '0x0', gasLimit:700000,gasPrice:0,nonce:0});" > tx-stub.js
+        echo "export default () => ({to:'0x116a9f35a402a2d34457bd72026c7f722d9d6333',gasLimit:700000,gasPrice:0,nonce:0});" > tx-stub.js
         npx esbuild node_modules/@kuru-labs/kuru-sdk/dist/index.js \
           --bundle --format=iife --global-name=KuruSdk \
           --alias:src/utils/txConfig=./tx-stub.js \
