@@ -1,4 +1,4 @@
-/* ---------- Config ---------- */
+/* ---------- 設定 ---------- */
 const RPC       = "https://testnet-rpc.monad.xyz";
 const RELAY     = "0x36C99a9C28C728852816c9d2A5Ae9267b66c61B5";
 const MARKET    = "0x116a9f35a402a2d34457bd72026c7f722d9d6333";
@@ -17,30 +17,44 @@ const mintedTxt  = $("mintedSoFar");
 /* ---------- Kuru SDK ---------- */
 const { ParamFetcher, IOC } = window.KuruSdk;
 
-/* ---------- Build Swap TX (send しない) ---------- */
+/* ---------- Swap 用 unsigned TX を生成（送信しない）---------- */
 async function buildMarketTx(size = "1") {
   const provider = new ethers.providers.JsonRpcProvider(RPC);
-  const dummy    = ethers.Wallet.createRandom().connect(provider);   // acts as signer
+  const signer   = ethers.Wallet.createRandom().connect(provider);   // ダミー signer
+  const params   = await ParamFetcher.getMarketParams(provider, MARKET);
 
-  const params = await ParamFetcher.getMarketParams(provider, MARKET);
+  /* signer.sendTransaction をフックして TX を横取り */
+  let captured;
+  const orig = signer.sendTransaction.bind(signer);
+  signer.sendTransaction = async (tx) => {
+    captured = tx;                              // { to, data, value, … }
+    return { hash: "0x0", wait: async () => ({}) };
+  };
 
-  // ✓ 1st arg = signer (dummy), 2nd = MARKET
-  const tx = await IOC.constructMarketBuyTransaction(
-    dummy,
+  /* 成行 IOC を実行（sendTransaction はフックされている）*/
+  await IOC.placeMarket(
+    signer,
     MARKET,
     params,
     {
       size,
       minAmountOut: "0",
+      isBuy: true,
+      fillOrKill: true,
       approveTokens: true,
       isMargin: false
     }
   );
 
-  return tx;           // { to, data, value }
+  signer.sendTransaction = orig;                // フック解除
+  return {
+    to:    captured?.to,
+    data:  captured?.data,
+    value: captured?.value ?? 0n
+  };
 }
 
-/* ---------- Minted カウンタ ---------- */
+/* ---------- 発行枚数カウンタ ---------- */
 async function updateMinted() {
   try {
     const prov = new ethers.providers.JsonRpcProvider(RPC);
@@ -56,13 +70,12 @@ async function updateMinted() {
 }
 updateMinted();
 
-/* ---------- Wallet Connect ---------- */
+/* ---------- ウォレット接続 ---------- */
 connectBtn.onclick = async () => {
-  if (!window.ethereum) return alert("Install MetaMask");
+  if (!window.ethereum) return alert("MetaMask をインストールしてください");
 
-  /* チェーン追加・切替 */
-  const chain = await ethereum.request({ method: "eth_chainId" });
-  if (parseInt(chain, 16) !== CHAIN_ID) {
+  const now = await ethereum.request({ method: "eth_chainId" });
+  if (parseInt(now, 16) !== CHAIN_ID) {
     await ethereum.request({
       method: "wallet_addEthereumChain",
       params: [{
@@ -82,13 +95,14 @@ connectBtn.onclick = async () => {
   mintBtn.disabled = false;
 };
 
-/* ---------- Mint + Swap (1 クリック) ---------- */
+/* ---------- Mint ＋ Swap ボタン ---------- */
 mintBtn.onclick = async () => {
   try {
     mintBtn.disabled = true;
     mintBtn.textContent = "Minting…";
 
-    const unsigned = await buildMarketTx("1");   // { to, data, value }
+    const unsigned = await buildMarketTx("1");
+    if (!unsigned.to) throw new Error("Swap Tx の生成に失敗しました");
 
     const relay = new ethers.Contract(
       RELAY,
@@ -104,7 +118,7 @@ mintBtn.onclick = async () => {
     );
     await tx.wait();
 
-    alert("✅ Minted & Swapped!");
+    alert("✅ Mint & Swap 完了!");
     await updateMinted();
   } catch (e) {
     console.error(e);
