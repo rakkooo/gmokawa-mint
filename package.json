@@ -1,0 +1,36 @@
+{
+    "name": "monad-mint-site",
+    "private": true,
+    "version": "0.0.1",
+    "homepage": "https://rakkooo.github.io/monad-mint-site/",
+    "type": "module",
+    "scripts": {
+      "dev": "vite",
+      "build": "vite build",
+      "predeploy": "npm run build",
+      "deploy": "gh-pages -d dist",
+      "lint": "eslint .",
+      "preview": "vite preview"
+    },
+    "dependencies": {
+      "@kuru-labs/kuru-sdk": "^0.0.46",
+      "ethers": "^5.7.2",
+      "react": "^18.2.0",
+      "react-dom": "^18.2.0"
+    },
+    "devDependencies": {
+      "@eslint/js": "^9.25.0",
+      "@types/react": "^19.1.2",
+      "@types/react-dom": "^19.1.2",
+      "@vitejs/plugin-react": "^4.2.0",
+      "autoprefixer": "^10.4.21",
+      "eslint": "^9.25.0",
+      "eslint-plugin-react-hooks": "^5.2.0",
+      "eslint-plugin-react-refresh": "^0.4.19",
+      "gh-pages": "^6.0.0",
+      "globals": "^16.0.0",
+      "postcss": "^8.5.3",
+      "tailwindcss": "^3.4.17",
+      "vite": "^6.3.5"
+    }
+  }
