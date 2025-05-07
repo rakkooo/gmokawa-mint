@@ -1,27 +1,46 @@
-<!DOCTYPE html><html lang="en"><head>
-<meta charset="UTF-8" />
-<title>Monad NFT Mint & Swap</title>
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<link rel="stylesheet" href="styles.css" />
-<!-- ethers v5 UMD（OK） -->
-<script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
-<!-- ↓↓ Kuru SDK は ESM CDN から script.js 内で import する ↓↓ -->
-</head><body>
-<header>
-  <h1>Monad NFT Mint&nbsp;&amp;&nbsp;Swap</h1>
-  <div id="walletStatus" class="wallet-status">Wallet not connected</div>
-  <button id="connectWalletBtn" class="connect-button">Connect Wallet</button>
-</header>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Monad NFT Mint & Swap</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <link rel="stylesheet" href="styles.css" />
 
-<main>
-  <section class="mint-container">
-    <h2>Mint ＋ Buy 1 MON</h2>
-    <p>Minted: <span id="mintedSoFar">--</span> / 5000</p>
-    <button id="mintBtn" class="mint-button" disabled>Mint &amp; Buy</button>
-  </section>
-</main>
+  <!-- ① 404 を防ぐ import-map（txConfig を空モジュールに置換） -->
+  <script type="importmap">
+  {
+    "imports": {
+      "src/utils/txConfig": "data:text/javascript,export default {}"
+    }
+  }
+  </script>
 
-<footer>© 2025 C's Family</footer>
-<!-- script.js を ES Modules として読み込む -->
-<script type="module" src="script.js"></script>
-</body></html>
+  <!-- ② ethers v5（UMD）-->
+  <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
+
+  <!-- ③ Kuru SDK（ESM）を先に読み込み、window に保持してから script.js を呼ぶ -->
+  <script type="module">
+    import * as KuruSdk from "https://esm.sh/@kuru-labs/kuru-sdk@0.0.46";
+    window.KuruSdk = KuruSdk;
+    import "./script.js";
+  </script>
+</head>
+
+<body>
+  <header>
+    <h1>Monad NFT Mint&nbsp;&amp;&nbsp;Swap</h1>
+    <div id="walletStatus" class="wallet-status">Wallet not connected</div>
+    <button id="connectWalletBtn" class="connect-button">Connect Wallet</button>
+  </header>
+
+  <main>
+    <section class="mint-container">
+      <h2>Mint ＋ Buy&nbsp;1 MON</h2>
+      <p>Minted: <span id="mintedSoFar">--</span> / 5000</p>
+      <button id="mintBtn" class="mint-button" disabled>Mint &amp; Buy</button>
+    </section>
+  </main>
+
+  <footer>© 2025 C's Family</footer>
+</body>
+</html>
