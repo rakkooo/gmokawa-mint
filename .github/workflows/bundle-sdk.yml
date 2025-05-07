@@ -1,32 +1,26 @@
+# .github/workflows/bundle-sdk.yml
 name: bundle-sdk
 on: [push]
-
 jobs:
   build:
     runs-on: ubuntu-latest
-    permissions:
-      contents: write          # ← push 権限を明示
+    permissions: { contents: write }
     steps:
     - uses: actions/checkout@v4
-
     - uses: actions/setup-node@v4
       with: { node-version: '18' }
 
-    - name: Install deps & build
-      run: |
+    - run: |
         npm install @kuru-labs/kuru-sdk@latest esbuild@latest
-
-        # ① txConfig を空モジュールで置き換える stub を作成
-        echo "export default () => ({});" > tx-stub.js
-
-        # ② esbuild で IIFE + グローバル化 + minify
+        # ★ txConfig スタブ – 必須キー to を含む
+        echo "export default () => ({to:'0x0000000000000000000000000000000000000001',gasLimit:0,gasPrice:0,nonce:0});" > tx-stub.js
+        # esbuild で IIFE & グローバル化
         npx esbuild node_modules/@kuru-labs/kuru-sdk/dist/index.js \
           --bundle --format=iife --global-name=KuruSdk \
           --alias:src/utils/txConfig=./tx-stub.js \
           --minify --outfile=docs/kuru-sdk.browser.js
 
-    - name: Commit bundle
-      run: |
+    - run: |
         git config user.name  github-actions
         git config user.email github-actions@github.com
         git add docs/kuru-sdk.browser.js
