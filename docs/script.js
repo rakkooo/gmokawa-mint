@@ -1,124 +1,80 @@
-const { utils, BigNumber } = window.ethers;
+/* docs/script.js - browser version (ethers v5) */
+const RPC_URL      = "https://testnet-rpc.monad.xyz";
+const MARKET       = "0x116a9f35a402a2d34457bd72026c7f722d9d6333";
+const SIZE_MON     = "1";
+const RELAY_MINT   = "0x36C99a9C28C728852816c9d2A5Ae9267b66c61B5";
+const NFT_ADDRESS  = "0x3B85eE467938ca59ea22Fd63f505Ce8103ABb4B3";
 
-/* ---------- 定数 ---------- */
-const RPC        = "https://testnet-rpc.monad.xyz";
-const RELAY_ADDR = "0x36C99a9C28C728852816c9d2A5Ae9267b66c61B5";
-const MARKET     = "0x116a9f35a402a2d34457bd72026c7f722d9d6333";
-const NFT        = "0x3B85eE467938ca59ea22Fd63f505Ce8103ABb4B3";
-const MAX_SUPPLY = 5000;
-const CHAIN_ID   = 10143;
-const CHAIN_HEX  = "0x279F";
+const relayAbi = [
+  "function forwardAndMint(address,bytes,address) payable returns (uint256)",
+  "event ForwardAndMint(address indexed user,address indexed target,uint256 value,uint256 tokenId)"
+];
+const nftAbi = ["function totalSupply() view returns (uint256)"];
 
-/* ---------- 便利ログ関数 ---------- */
-const log = (tag, obj) =>
-  console.log(`🪵${tag}`, JSON.parse(JSON.stringify(obj, (_, v) =>
-    typeof v === "bigint" ? v.toString() : v)));
+const provider    = new ethers.providers.JsonRpcProvider(RPC_URL);
+let signer, relay, nft;
 
-/* ---------- DOM 取得 ---------- */
-const $ = id => document.getElementById(id);
-const connectBtn = $("connectWalletBtn");
-const statusTxt  = $("walletStatus");
-const mintBtn    = $("mintBtn");
-const mintedTxt  = $("mintedSoFar");
-
-/* ---------- Kuru SDK 参照 ---------- */
-const { ParamFetcher, IOC } = window.KuruSdk;
-
-/* ---------- swap 用 unsigned TX 生成 ---------- */
-async function buildMarketTx(size = "1") {
-  const provider = new ethers.providers.JsonRpcProvider(RPC);
-  const signer   = ethers.Wallet.createRandom().connect(provider);
-  const params   = await ParamFetcher.getMarketParams(provider, MARKET);
-
-  let captured;
-  signer.sendTransaction = async tx => { captured = tx; return { hash:"0x0", wait:async()=>({}) }; };
-
-  try {
-    await IOC.placeMarket(
-      signer, MARKET, params,
-      { size, minAmountOut:"0", isBuy:true, fillOrKill:true,
-        approveTokens:true, isMargin:false }
-    );
-  } catch (e) {
-    console.error("SDK placeMarket error:", e);
-    throw e;
-  }
-
-  if (!captured) throw new Error("SDK がトランザクションを生成しませんでした");
-
-  log("captured-tx", captured);
-
-  return {
-    to:    captured.to,
-    data:  captured.data,
-    value: BigNumber.from(captured.value || 0)  // BigNumber 型に統一
-  };
-}
-
-/* ---------- Mint 済み枚数表示 ---------- */
-async function updateMinted() {
-  const prov = new ethers.providers.JsonRpcProvider(RPC);
-  const nft  = new ethers.Contract(NFT, ["function totalSupply() view returns(uint256)"], prov);
-  mintedTxt.textContent = `${(await nft.totalSupply()).toNumber()} / ${MAX_SUPPLY}`;
-}
-window.addEventListener("load", updateMinted);
-
-/* ---------- ウォレット接続 ---------- */
-connectBtn.onclick = async () => {
-  if (!window.ethereum) return alert("MetaMask をインストールしてください");
-  const now = parseInt(await ethereum.request({ method:"eth_chainId" }), 16);
-  if (now !== CHAIN_ID) {
-    await ethereum.request({
-      method:"wallet_addEthereumChain",
-      params:[{
-        chainId: CHAIN_HEX,
-        chainName:"Monad Testnet",
-        rpcUrls:[RPC],
-        nativeCurrency:{ name:"MON", symbol:"MON", decimals:18 }
-      }]
-    });
-  }
-  const [acct] = await ethereum.request({ method:"eth_requestAccounts" });
-  statusTxt.textContent = `Connected: ${acct.slice(0,6)}…${acct.slice(-4)}`;
-  window.provider = new ethers.providers.Web3Provider(window.ethereum);
-  window.signer   = provider.getSigner();
-  mintBtn.disabled = false;
+const elems = {
+  walletStatus: document.getElementById("walletStatus"),
+  connectBtn:   document.getElementById("connectWalletBtn"),
+  mintBtn:      document.getElementById("mintBtn"),
+  mintedSoFar:  document.getElementById("mintedSoFar"),
 };
 
+/* ---------- ウォレット接続 ---------- */
+elems.connectBtn.onclick = async () => {
+  await window.ethereum.request({ method: "eth_requestAccounts" });
+  provider.pollingInterval = 12_000;                // 少し遅延でも OK
+  signer = provider.getSigner();
+  relay  = new ethers.Contract(RELAY_MINT, relayAbi, signer);
+  nft    = new ethers.Contract(NFT_ADDRESS, nftAbi, provider);
+
+  elems.walletStatus.textContent = "Connected: " + await signer.getAddress();
+  elems.mintBtn.disabled = false;
+  updateSupply();
+};
+
+/* ---------- Supply 表示 ---------- */
+async function updateSupply() {
+  const total = await nft.totalSupply();            // ERC-721 標準 :contentReference[oaicite:7]{index=7}
+  elems.mintedSoFar.textContent = total.toString();
+}
+
 /* ---------- Mint + Swap ---------- */
-mintBtn.onclick = async () => {
+elems.mintBtn.onclick = async () => {
   try {
-    mintBtn.disabled = true;
-    mintBtn.textContent = "Minting…";
+    elems.mintBtn.disabled = true;
+    elems.mintBtn.textContent = "Sending...";
 
-    const unsigned = await buildMarketTx("1");
-    if (!utils.isAddress(unsigned.to))  throw new Error("ターゲットアドレスが不正");
-    if (!utils.isHexString(unsigned.data)) throw new Error("calldata が不正");
+    // --- (1) buildMarketTx: Kuru SDK で unsigned TX 生成 ---
+    const marketParams = await KuruSdk.ParamFetcher.getMarketParams(provider, MARKET);
+    let captured;
+    const origSend = signer.sendTransaction.bind(signer);
+    signer.sendTransaction = async (tx) => { captured = tx; return { hash: "0x0", wait: async () => ({ status: 1 }) }; };
 
-    log("forward-input", unsigned);
-
-    const relay = new ethers.Contract(
-      RELAY_ADDR,
-      ["function forwardAndMint(address,bytes,address) payable returns(uint256)"],
-      window.signer
+    await KuruSdk.IOC.placeMarket(
+      signer, MARKET, marketParams,
+      { size: SIZE_MON, minAmountOut: "0", isBuy: true, fillOrKill: true, approveTokens: true, isMargin: false }
     );
+    signer.sendTransaction = origSend;
 
+    // --- (2) forwardAndMint ---
     const tx = await relay.forwardAndMint(
-      unsigned.to,
-      unsigned.data,
-      await signer.getAddress(),
-      { value: unsigned.value }
+      captured.to, captured.data, await signer.getAddress(),
+      { value: captured.value || 0 }
     );
-    log("txHash", tx.hash);
-    await tx.wait();
+    console.log("tx:", tx.hash);
+    elems.mintBtn.textContent = "Pending...";
 
-    alert("✅ Mint & Swap 完了!");
-    updateMinted();
+    const receipt = await tx.wait();
+    const tokenId = receipt.events?.find(e => e.event === "ForwardAndMint")?.args?.tokenId;
+    alert("✅ Minted! Token ID: " + tokenId);
+    updateSupply();
   } catch (err) {
     console.error(err);
-    alert(err.message || "Mint 失敗");
+    alert("❌ Error: " + (err?.message || err));
   } finally {
-    mintBtn.disabled = false;
-    mintBtn.textContent = "Mint & Buy";
+    elems.mintBtn.disabled = false;
+    elems.mintBtn.textContent = "Mint & Buy";
   }
 };
