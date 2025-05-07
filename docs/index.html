@@ -1,24 +1,27 @@
 <!DOCTYPE html><html lang="en"><head>
-    <meta charset="UTF-8" />
-    <title>Monad Mint & Swap</title>
-    <meta name="viewport" content="width=device-width,initial-scale=1">
-    <link rel="stylesheet" href="styles.css" />
-    <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@kuru-labs/kuru-sdk@0.0.46/dist/index.umd.js"></script>
-    </head><body>
-    <header>
-      <h1>Monad NFT Mint&nbsp;&amp;&nbsp;Swap</h1>
-      <div id="walletStatus" class="wallet-status">Wallet not connected</div>
-      <button id="connectWalletBtn" class="connect-button">Connect Wallet</button>
-    </header>
-    <main>
-      <section class="mint-container">
-        <h2>Mint ＋ Buy 1 MON</h2>
-        <p>Minted: <span id="mintedSoFar">--</span> / 5000</p>
-        <button id="mintBtn" class="mint-button" disabled>Mint &amp; Buy</button>
-      </section>
-    </main>
-    <footer>© 2025 C's Family</footer>
-    <script src="script.js"></script>
-    </body></html>
-    
+<meta charset="UTF-8" />
+<title>Monad NFT Mint & Swap</title>
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<link rel="stylesheet" href="styles.css" />
+<!-- ethers v5 UMD -->
+<script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
+<!-- Kuru SDK UMD -->
+<script src="https://cdn.jsdelivr.net/npm/@kuru-labs/kuru-sdk@0.0.46/dist/index.umd.js"></script>
+</head><body>
+<header>
+  <h1>Monad NFT Mint&nbsp;&amp;&nbsp;Swap</h1>
+  <div id="walletStatus" class="wallet-status">Wallet not connected</div>
+  <button id="connectWalletBtn" class="connect-button">Connect Wallet</button>
+</header>
+
+<main>
+  <section class="mint-container">
+    <h2>Mint ＋ Buy 1 MON</h2>
+    <p>Minted: <span id="mintedSoFar">--</span> / 5000</p>
+    <button id="mintBtn" class="mint-button" disabled>Mint &amp; Buy</button>
+  </section>
+</main>
+
+<footer>© 2025 C's Family</footer>
+<script src="script.js"></script>
+</body></html>
