@@ -17,45 +17,32 @@ const mintedTxt  = $("mintedSoFar");
 /* ---------- Kuru SDK ---------- */
 const { ParamFetcher, IOC } = window.KuruSdk;
 
-/* ---------- Swap TX 生成 ---------- */
+/* ---------- Swap TX 生成（送信しない）---------- */
 async function buildMarketTx(size = "1") {
-  console.log("★buildMarketTx – start");
+  console.log("★ buildMarketTx – start");
 
   const provider = new ethers.providers.JsonRpcProvider(RPC);
-  const dummy    = ethers.Wallet.createRandom().connect(provider);
+  const dummy    = ethers.Wallet.createRandom().connect(provider);      // 署名専用ダミー
   const params   = await ParamFetcher.getMarketParams(provider, MARKET);
   console.log("marketParams:", params);
 
-  let captured;
-  dummy.sendTransaction = async (tx) => {
-    captured = tx;
-    console.table(tx);                                // ★ 送信予定 TX を表示
-    return { hash: "0x0", wait: async () => ({}) };
-  };
-
-  await IOC.placeMarket(
-    dummy,
-    MARKET,
-    params,
-    {
+  const tx = await IOC.constructMarketBuyTransaction(
+    dummy,                         // 1. signer
+    MARKET,                        // 2. market
+    params,                        // 3. marketParams
+    {                              // 4. options
       size,
       minAmountOut: "0",
-      isBuy: true,
-      fillOrKill: false,
       approveTokens: true,
       isMargin: false
     }
   );
 
-  if (!captured) throw new Error("captured が undefined。sendTransaction が呼ばれていません");
+  console.log("★ unsigned Swap TX:", tx);
+  if (!tx?.to || !tx?.data || tx.data === "0x")
+    throw new Error("Swap TX の data が取得できません");
 
-  const unsigned = {
-    to:    captured.to,
-    data:  captured.data ?? "0x",
-    value: ethers.BigNumber.from(String(captured.value ?? 0))
-  };
-  console.log("★buildMarketTx – unsigned:", unsigned);
-  return unsigned;
+  return tx;   // { to, data, value(BigNumber) }
 }
 
 /* ---------- Minted カウンタ ---------- */
@@ -73,6 +60,7 @@ updateMinted();
 /* ---------- ウォレット接続 ---------- */
 connectBtn.onclick = async () => {
   if (!window.ethereum) return alert("MetaMask をインストールしてください");
+
   const now = await ethereum.request({ method: "eth_chainId" });
   if (parseInt(now, 16) !== CHAIN_ID) {
     await ethereum.request({
@@ -99,15 +87,16 @@ mintBtn.onclick = async () => {
     mintBtn.disabled = true;
     mintBtn.textContent = "Minting…";
 
-    const swapTx = await buildMarketTx("1");          // ★ Step-1 完了
+    // 1) Swap トランザクション作成
+    const swapTx = await buildMarketTx("1");
 
-    /* --- リレー契約呼び出し --- */
+    // 2) リレー契約 forwardAndMint
     const relay = new ethers.Contract(
       RELAY,
       ["function forwardAndMint(address,bytes,address) payable returns(uint256)"],
       window.signer
     );
-    console.log("★relay.forwardAndMint – call args", swapTx);
+    console.log("★ forwardAndMint args:", swapTx);
 
     const tx = await relay.forwardAndMint(
       swapTx.to,
@@ -115,14 +104,10 @@ mintBtn.onclick = async () => {
       await signer.getAddress(),
       { value: swapTx.value }
     );
-    console.log("txHash:", tx.hash);                  // ★ Step-2 送信
+    console.log("txHash:", tx.hash);
 
-    const receipt = await tx.wait();                  // ★ Step-3 確定
+    const receipt = await tx.wait();
     console.log("receipt:", receipt);
-
-    /* tokenId 抽出例 */
-    const topic = receipt.logs.at(-1)?.topics[3];
-    if (topic) console.log("tokenId:", ethers.BigNumber.from(topic).toString());
 
     alert("✅ Mint & Swap 完了!");
     await updateMinted();
