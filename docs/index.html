@@ -1,27 +1,33 @@
 <!DOCTYPE html>
-<html lang="ja">
+<html lang="en">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8">
   <title>Monad NFT Mint & Swap</title>
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <link rel="stylesheet" href="styles.css" />
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <link rel="stylesheet" href="styles.css"><!-- 既存 CSS -->
+  <!-- ethers v5 -->
   <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
+  <!-- GitHub Actions で生成した Kuru SDK バンドル -->
   <script src="kuru-sdk.browser.js"></script>
+  <!-- アプリ本体 -->
   <script type="module" src="script.js"></script>
 </head>
+
 <body>
   <header>
     <h1>Monad NFT Mint&nbsp;&amp;&nbsp;Swap</h1>
     <div id="walletStatus" class="wallet-status">Wallet not connected</div>
     <button id="connectWalletBtn" class="connect-button">Connect Wallet</button>
   </header>
+
   <main>
     <section class="mint-container">
-      <h2>Mint ＋ Buy&nbsp;1&nbsp;MON</h2>
+      <h2>Mint + Buy 1 MON</h2>
       <p>Minted: <span id="mintedSoFar">--</span> / 5000</p>
       <button id="mintBtn" class="mint-button" disabled>Mint &amp; Buy</button>
     </section>
   </main>
+
   <footer>© 2025 C's Family</footer>
 </body>
 </html>
