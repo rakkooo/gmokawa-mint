@@ -1,29 +1,46 @@
 # .github/workflows/bundle-sdk.yml
 name: bundle-sdk
-on: [push]
+on:                        # ← Mint ボタンではなく “push” 時だけ
+  push:
+    branches: [ main ]     # develop など別ブランチなら適宜変更
+
 jobs:
   build:
     runs-on: ubuntu-latest
-    permissions: { contents: write }
+    permissions:
+      contents: write      # ← リポジトリへ push する権限
     steps:
+    # 1) ソース取得
     - uses: actions/checkout@v4
+
+    # 2) Node.js セットアップ
     - uses: actions/setup-node@v4
-      with: { node-version: '18' }
+      with:
+        node-version: '18'
 
-    - run: |
+    # 3) 依存インストール & バンドル
+    - name: bundle-sdk
+      run: |
+        # -- インストール（キャッシュ不要ならこれで充分）
         npm install @kuru-labs/kuru-sdk@latest esbuild@latest
-        # ★ txConfig スタブ – 必須キー to を含む
-        echo "export default () => ({to:'0x0000000000000000000000000000000000000001',gasLimit:700000,gasPrice:0,nonce:0});" > tx-stub.js
 
-        # esbuild で IIFE & グローバル化
+        # -- txConfig のスタブを作成（関数＋必須キーを含む）
+        echo "export default () => ({to:'0x0000000000000000000000000000000000000001',gasLimit:210000,gasPrice:0,nonce:0});" > tx-stub.js
+
+        # -- esbuild で IIFE 化 + エイリアス差し替え + minify
         npx esbuild node_modules/@kuru-labs/kuru-sdk/dist/index.js \
-          --bundle --format=iife --global-name=KuruSdk \
+          --bundle \
+          --format=iife \
+          --global-name=KuruSdk \
           --alias:src/utils/txConfig=./tx-stub.js \
-          --minify --outfile=docs/kuru-sdk.browser.js
+          --minify \
+          --outfile=docs/kuru-sdk.browser.js
 
-    - run: |
-        git config user.name  github-actions
-        git config user.email github-actions@github.com
+    # 4) 生成物をコミット & push
+    - name: commit bundle
+      run: |
+        git config user.name  "github-actions"
+        git config user.email "github-actions@github.com"
         git add docs/kuru-sdk.browser.js
         git commit -m "ci: bundle sdk" || echo "no changes"
         git push
