@@ -1,4 +1,4 @@
-import { utils, BigNumber } from "ethers";
+const { utils, BigNumber } = window.ethers;
 
 /* ---------- 定数 ---------- */
 const RPC        = "https://testnet-rpc.monad.xyz";
