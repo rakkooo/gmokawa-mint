@@ -17,7 +17,7 @@ jobs:
         npm install @kuru-labs/kuru-sdk@latest esbuild@latest
 
         # ① txConfig を空モジュールで置き換える stub を作成
-        echo "export default {};" > tx-stub.js
+        echo "export default () => ({});" > tx-stub.js
 
         # ② esbuild で IIFE + グローバル化 + minify
         npx esbuild node_modules/@kuru-labs/kuru-sdk/dist/index.js \
