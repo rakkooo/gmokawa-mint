@@ -1,0 +1,21 @@
+# .github/workflows/bundle-sdk.yml
+name: bundle-sdk
+on: [push]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - uses: actions/setup-node@v4
+      with: { node-version: '18' }
+    - run: |
+        npm install @kuru-labs/kuru-sdk@latest esbuild
+        npx esbuild node_modules/@kuru-labs/kuru-sdk/dist/index.js \
+          --bundle --format=iife --global-name=KuruSdk \
+          --minify --outfile=docs/kuru-sdk.browser.js
+    - run: |
+        git config user.name  github-actions
+        git config user.email github-actions@github.com
+        git add docs/kuru-sdk.browser.js
+        git commit -m "ci: bundle sdk" || echo "no changes"
+    - run: git push
