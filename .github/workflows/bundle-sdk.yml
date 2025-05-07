@@ -13,7 +13,8 @@ jobs:
     - run: |
         npm install @kuru-labs/kuru-sdk@latest esbuild@latest
         # ★ txConfig スタブ – 必須キー to を含む
-        echo "export default () => ({to:'0x0000000000000000000000000000000000000001',gasLimit:0,gasPrice:0,nonce:0});" > tx-stub.js
+        echo "export default () => ({to:'0x0000000000000000000000000000000000000001',gasLimit:700000,gasPrice:0,nonce:0});" > tx-stub.js
+
         # esbuild で IIFE & グローバル化
         npx esbuild node_modules/@kuru-labs/kuru-sdk/dist/index.js \
           --bundle --format=iife --global-name=KuruSdk \
