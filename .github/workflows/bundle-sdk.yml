@@ -1,32 +1,35 @@
 name: bundle-sdk
 on:
   push:
-    branches: [main]
+    branches: [main]               # PR では動かない
+
 permissions:
   contents: write
+
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
-    - uses: actions/setup-node@v4
-      with:
-        node-version: 18
-    - name: Install deps
-      run: npm ci
-    - name: Bundle Kuru SDK
-      run: |
-        echo "export default () => ({to:'0x116a9f35a402a2d34457bd72026c7f722d9d6333',gasLimit:700000});" > tx-stub.js
-        npx esbuild $(npm root)/@kuru-labs/kuru-sdk/dist/index.js \
-          --bundle --format=iife --global-name=KuruSdk \
-          --alias:src/utils/txConfig=./tx-stub.js \
-          --minify --outfile=docs/kuru-sdk.browser.js
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 18 }
 
-    - name: Commit bundle if changed
-      run: |
-        git diff --quiet docs/kuru-sdk.browser.js && exit 0
-        git config user.name  github-actions
-        git config user.email github-actions@github.com
-        git add docs/kuru-sdk.browser.js
-        git commit -m "ci: bundle sdk"
-        git push
+      - name: Install deps
+        run: npm ci
+
+      - name: Bundle Kuru SDK
+        run: |
+          echo "export default () => ({to:'0x116a9f35a402a2d34457bd72026c7f722d9d6333',gasLimit:700000});" > tx-stub.js
+          npx esbuild $(npm root)/@kuru-labs/kuru-sdk/dist/index.js \
+            --bundle --format=iife --global-name=KuruSdk \
+            --alias:src/utils/txConfig=./tx-stub.js \
+            --minify --outfile=docs/kuru-sdk.browser.js
+
+      - name: Commit bundle if changed
+        run: |
+          git diff --quiet docs/kuru-sdk.browser.js && exit 0
+          git config user.name  github-actions
+          git config user.email github-actions@github.com
+          git add docs/kuru-sdk.browser.js
+          git commit -m "ci: bundle sdk"
+          git push
