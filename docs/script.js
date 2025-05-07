@@ -24,24 +24,24 @@ async function buildMarketTx(size = "1") {
   const provider = new ethers.providers.JsonRpcProvider(RPC);
   const dummy    = ethers.Wallet.createRandom().connect(provider);
   const params   = await ParamFetcher.getMarketParams(provider, MARKET);
-  console.log("marketParams:", params);
 
-  /* ここがポイント：size を第４引数で渡す */
+  // ★ size は opts の一部として渡す
   const tx = await IOC.constructMarketBuyTransaction(
-    dummy,            // signer   (dummy で OK)
-    MARKET,           // market
-    params,           // marketParams
-    size,             // ★ size 文字列！
+    dummy,               // signer
+    MARKET,              // market
+    params,              // marketParams
     {
-      minAmountOut:  "0",
+      size,              // ← ここに含める
+      minAmountOut: "0",
       approveTokens: true,
-      isMargin:      false
+      isMargin: false
     }
   );
 
   console.log("★ unsigned Swap TX:", tx);
   if (!tx?.data || tx.data === "0x") throw new Error("swap calldata が空です");
-  return tx;   // { to, data, value(BigNumber) }
+
+  return tx; // { to, data, value(BigNumber) }
 }
 
 /* ---------- Minted Counter ---------- */
