@@ -1,27 +1,34 @@
 name: bundle-sdk
-on:
-  push:                # push 時だけ走るのでユーザーの Mint には影響ゼロ
+on: [push]
+
 jobs:
   build:
     runs-on: ubuntu-latest
-    permissions:                  # ← push する権限を明示
-      contents: write
+    permissions:
+      contents: write          # ← push 権限を明示
     steps:
     - uses: actions/checkout@v4
 
     - uses: actions/setup-node@v4
       with: { node-version: '18' }
 
-    - run: |
-        npm install @kuru-labs/kuru-sdk@latest esbuild
+    - name: Install deps & build
+      run: |
+        npm install @kuru-labs/kuru-sdk@latest esbuild@latest
+
+        # ① txConfig を空モジュールで置き換える stub を作成
+        echo "export default {};" > tx-stub.js
+
+        # ② esbuild で IIFE + グローバル化 + minify
         npx esbuild node_modules/@kuru-labs/kuru-sdk/dist/index.js \
           --bundle --format=iife --global-name=KuruSdk \
+          --alias:src/utils/txConfig=./tx-stub.js \
           --minify --outfile=docs/kuru-sdk.browser.js
 
     - name: Commit bundle
       run: |
-        git config user.name  "github-actions"
-        git config user.email "github-actions@github.com"
+        git config user.name  github-actions
+        git config user.email github-actions@github.com
         git add docs/kuru-sdk.browser.js
         git commit -m "ci: bundle sdk" || echo "no changes"
         git push
