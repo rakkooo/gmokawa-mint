@@ -1,28 +1,51 @@
 name: bundle-sdk
-on: [push]                     # ← ユーザー Mint では動かない
+
+on:
+  push:
+    branches: [ main ]      # PR ブランチでは動かさない
+
+permissions:
+  contents: write
+
+defaults:
+  run:
+    shell: bash
+
 jobs:
   build:
     runs-on: ubuntu-latest
-    permissions: { contents: write }
+
     steps:
     - uses: actions/checkout@v4
+
     - uses: actions/setup-node@v4
-      with: { node-version: '18' }
+      with:
+        node-version: 18
 
-    - name: bundle
+    - name: Install dependencies
+      run: npm ci
+
+    - name: Bundle Kuru SDK
       run: |
-        npm install @kuru-labs/kuru-sdk@latest esbuild@latest
-        # SDKがこれらを上書きすることを期待
-        echo "export default () => ({to:'0x116a9f35a402a2d34457bd72026c7f722d9d6333',gasLimit:700000,gasPrice:0,nonce:0});" > tx-stub.js
-        npx esbuild node_modules/@kuru-labs/kuru-sdk/dist/index.js \
-          --bundle --format=iife --global-name=KuruSdk \
+        # 空オブジェクト stub で txConfig を無効化（本番値は実行時に注入）
+        echo 'export default () => ({});' > tx-stub.js
+
+        npx esbuild $(npm root)/@kuru-labs/kuru-sdk/dist/index.js \
+          --bundle \
+          --format=iife \
+          --global-name=KuruSdk \
           --alias:src/utils/txConfig=./tx-stub.js \
-          --minify --outfile=docs/kuru-sdk.browser.js
+          --minify \
+          --outfile=docs/kuru-sdk.browser.js
 
-    - name: commit
+    - name: Commit if bundle changed
       run: |
-        git config user.name  github-actions
-        git config user.email github-actions@github.com
-        git add docs/kuru-sdk.browser.js
-        git commit -m "ci: bundle sdk" || echo "no changes"
-        git push
+        if ! git diff --quiet docs/kuru-sdk.browser.js; then
+          git config user.name  github-actions
+          git config user.email github-actions@github.com
+          git add docs/kuru-sdk.browser.js
+          git commit -m "ci: bundle sdk"
+          git push
+        else
+          echo "Bundle unchanged – skip commit"
+        fi
