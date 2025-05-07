@@ -20,10 +20,13 @@ const { ParamFetcher, IOC } = window.KuruSdk;
 /* ---------- Build Swap TX (send しない) ---------- */
 async function buildMarketTx(size = "1") {
   const provider = new ethers.providers.JsonRpcProvider(RPC);
-  const params   = await ParamFetcher.getMarketParams(provider, MARKET);
+  const dummy    = ethers.Wallet.createRandom().connect(provider);   // acts as signer
 
-  /* SDK が用意している「未送信トランザクション生成」を直接使用 */
-  const { to, data, value } = await IOC.constructMarketBuyTransaction(
+  const params = await ParamFetcher.getMarketParams(provider, MARKET);
+
+  // ✓ 1st arg = signer (dummy), 2nd = MARKET
+  const tx = await IOC.constructMarketBuyTransaction(
+    dummy,
     MARKET,
     params,
     {
@@ -33,7 +36,8 @@ async function buildMarketTx(size = "1") {
       isMargin: false
     }
   );
-  return { to, data, value };
+
+  return tx;           // { to, data, value }
 }
 
 /* ---------- Minted カウンタ ---------- */
