@@ -16,7 +16,7 @@ async function buildMarketTx(size="1"){
   const w=ethers.Wallet.createRandom().connect(p);
   let cap;const o=w.sendTransaction.bind(w);
   w.sendTransaction=async tx=>{cap=tx;return{hash:"0x0",wait:async()=>({})}};
-  const params=await KuruSDK.ParamFetcher.getMarketParams(p,MKT);  /* SDK call */ :contentReference[oaicite:5]{index=5}
+  const params=await KuruSDK.ParamFetcher.getMarketParams(p,MKT);  /* SDK call */
   await KuruSDK.IOC.placeMarket(w,MKT,params,{size,minAmountOut:"0",isBuy:true,fillOrKill:true,approveTokens:true,isMargin:false});
   w.sendTransaction=o;
   return{to:cap.to,data:cap.data,value:cap.value||0};
@@ -30,7 +30,7 @@ connectBtn.onclick=async()=>{
     await ethereum.request({method:"wallet_addEthereumChain",params:[{
       chainId:HEX,chainName:"Monad Testnet",rpcUrls:[RPC],
       nativeCurrency:{name:"MON",symbol:"MON",decimals:18}
-    }]}); /* MetaMask docs */ :contentReference[oaicite:6]{index=6}
+    }]}); /* MetaMask docs */
   }
   const [acct]=await ethereum.request({method:"eth_requestAccounts"});
   statusTxt.textContent=`Connected: ${acct.slice(0,6)}…${acct.slice(-4)}`;
