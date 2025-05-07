@@ -1,21 +1,27 @@
-# .github/workflows/bundle-sdk.yml
 name: bundle-sdk
-on: [push]
+on:
+  push:                # push 時だけ走るのでユーザーの Mint には影響ゼロ
 jobs:
   build:
     runs-on: ubuntu-latest
+    permissions:                  # ← push する権限を明示
+      contents: write
     steps:
     - uses: actions/checkout@v4
+
     - uses: actions/setup-node@v4
       with: { node-version: '18' }
+
     - run: |
-        npm install @kuru-labs/kuru-sdk@latest esbuild
+        npm install @kuru-labs/kuru-sdk@latest esbuild        # 最新 SDK を取得 :contentReference[oaicite:1]{index=1}
         npx esbuild node_modules/@kuru-labs/kuru-sdk/dist/index.js \
           --bundle --format=iife --global-name=KuruSdk \
-          --minify --outfile=docs/kuru-sdk.browser.js
-    - run: |
-        git config user.name  github-actions
-        git config user.email github-actions@github.com
+          --minify --outfile=docs/kuru-sdk.browser.js         # IIFE+グローバル :contentReference[oaicite:2]{index=2}
+
+    - name: Commit bundle
+      run: |
+        git config user.name  "github-actions"
+        git config user.email "github-actions@github.com"
         git add docs/kuru-sdk.browser.js
         git commit -m "ci: bundle sdk" || echo "no changes"
-    - run: git push
+        git push
