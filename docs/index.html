@@ -4,26 +4,18 @@
   <meta charset="UTF-8" />
   <title>Monad NFT Mint & Swap</title>
   <meta name="viewport" content="width=device-width,initial-scale=1" />
+
+  <!-- 既存 CSS を変更しない場合はそのまま参照 -->
   <link rel="stylesheet" href="styles.css" />
 
-  <!-- ① 404 を防ぐ import-map（txConfig を空モジュールに置換） -->
-  <script type="importmap">
-  {
-    "imports": {
-      "src/utils/txConfig": "data:text/javascript,export default {}"
-    }
-  }
-  </script>
-
-  <!-- ② ethers v5（UMD）-->
+  <!-- ethers v5 (UMD) -->
   <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
 
-  <!-- ③ Kuru SDK（ESM）を先に読み込み、window に保持してから script.js を呼ぶ -->
-  <script type="module">
-    import * as KuruSdk from "https://esm.sh/@kuru-labs/kuru-sdk@0.0.46";
-    window.KuruSdk = KuruSdk;
-    import "./script.js";
-  </script>
+  <!-- Auto-generated Kuru SDK bundle（GitHub Actions が docs/ に生成） -->
+  <script src="kuru-sdk.browser.js"></script>
+
+  <!-- アプリロジック -->
+  <script type="module" src="script.js"></script>
 </head>
 
 <body>
@@ -35,7 +27,7 @@
 
   <main>
     <section class="mint-container">
-      <h2>Mint ＋ Buy&nbsp;1 MON</h2>
+      <h2>Mint ＋ Buy&nbsp;1&nbsp;MON</h2>
       <p>Minted: <span id="mintedSoFar">--</span> / 5000</p>
       <button id="mintBtn" class="mint-button" disabled>Mint &amp; Buy</button>
     </section>
