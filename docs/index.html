@@ -1,18 +1,12 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="utf-8" />
   <title>C's Family NFT Mint</title>
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-
-  <!-- Styles -->
   <link rel="stylesheet" href="styles.css" />
 
-  <!-- ethers v5 UMD (SDK が依存) -->
-  <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
-
-  <!-- Kuru SDK + ethers v5 を IIFE でバンドルしたファイル（CI が自動生成） -->
-  <script src="kuru-sdk.browser.js"></script>
+  <!-- 依存しない軽量スクリプトなら head に置いてもよいが、ここでは外す -->
 </head>
 <body>
   <header>
@@ -31,10 +25,17 @@
 
   <footer><p>© 2025 C's Family</p></footer>
 
-  <!-- アプリ本体 -->
+  <!-- ===== 依存順に並べる ===== -->
+  <!-- 1. ethers v5（SDK が依存） -->
+  <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
+
+  <!-- 2. SDK + ethers をバンドルしたファイル（CI 生成） -->
+  <script src="kuru-sdk.browser.js"></script>
+
+  <!-- 3. あなたのアプリ本体 -->
   <script src="script.js"></script>
+
+  <!-- 4. エラーロガー（最後で OK） -->
+  <script src="errorReporter.js"></script>
 </body>
 </html>
-<script src="kuru-sdk.browser.js"></script>
-<script src="script.js"></script>
-<script src="errorReporter.js"></script>
