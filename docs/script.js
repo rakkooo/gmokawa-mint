@@ -1,9 +1,9 @@
 /* --------------- 設定 --------------- */
 const RPC_URL   = "https://testnet-rpc.monad.xyz";
 const CHAIN_HEX = "0x279F"; // Monad Testnet
-const MARKET    = "0x116a9f35a402a2d34457bd72026c7f722d9d6333";
+const MARKET    = "0xa4c519b1d2b28ae33a9d3d345c676725e642c99d";
 const RELAY     = "0x36C99a9C28C728852816c9d2A5Ae9267b66c61B5";
-const NFT       = "0x3B85eE467938ca59ea22Fd63f505Ce8103ABb4B3";
+const NFT       = "";
 const SIZE_MON  = "1";
 
 const $ = id => document.getElementById(id);
