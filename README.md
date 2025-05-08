@@ -1,1 +1,1 @@
-https://rakkooo.github.io/monad-mint-site/
+https://rakkooo.github.io/gmokawa-mint/
