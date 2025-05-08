@@ -7,26 +7,19 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 20 }                     # Node18 は EoL :contentReference[oaicite:5]{index=5}
 
-      - uses: actions/setup-node@v4          # Node20 を取得 :contentReference[oaicite:9]{index=9}
-        with: { node-version: 20 }
+      - run: npm install --no-audit --no-fund          # ethers + sdk を node_modules に展開
 
-      - run: npm install --no-audit --no-fund   # lockfile 生成
-
-      # ① SDK + ethers を 1 ファイルに IIFE 出力
       - run: |
           echo "import * as S from '@kuru-labs/kuru-sdk'; import * as ethers from 'ethers'; window.KuruSdk=S; window.ethers=ethers;" > sdk-entry.js
-          npx esbuild sdk-entry.js --bundle --format=iife --global-name=KuruSdk --packages=bundle --minify --outfile=docs/kuru-sdk.browser.js
+          npx esbuild sdk-entry.js \
+              --bundle --format=iife --global-name=KuruSdk \
+              --packages=bundle --minify --outfile=docs/kuru-sdk.browser.js
 
-      # ② アプリ本体をバンドル
-      - run: npm run build
-
-      # ③ 差分コミット（docs と lockfile のみ）
-      - run: |
-          git diff --quiet docs || {
-            git config user.name  github-actions
-            git config user.email github-actions@github.com
-            git add docs package-lock.json
-            git commit -m "ci: auto-bundle sdk + app"
-            git push
-          }
+      - run: git diff --quiet docs || { \
+              git config user.name github-actions && \
+              git config user.email github-actions@github.com && \
+              git add docs package-lock.json && \
+              git commit -m "ci: bundle sdk" && git push; }
