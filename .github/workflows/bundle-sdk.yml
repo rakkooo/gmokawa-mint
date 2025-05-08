@@ -4,7 +4,7 @@ on:
     branches: [main]
 
 permissions:
-  contents: write   # 自動コミットで必要
+  contents: write
 
 jobs:
   build:
@@ -12,18 +12,24 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
-        with: { node-version: 18 }   # LTS, npm v10 相当  :contentReference[oaicite:0]{index=0}
+        with: { node-version: 18 }
 
-      # SDK をブラウザ用 IIFE に最小化して docs/ へ配置
-      - name: Bundle Kuru SDK
+      # ① SDK のパスを 1 つに固定するエントリーファイルを作る
+      - name: Make entry
         run: |
+          echo "import * as S from '@kuru-labs/kuru-sdk'; export default S;" > sdk-entry.js
           echo "export default () => ({to:'0x116a9f35a402a2d34457bd72026c7f722d9d6333',gasLimit:700000});" > tx-stub.js
-          npx esbuild $(npm root)/@kuru-labs/kuru-sdk/dist/index.js \
-            --bundle --format=iife --global-name=KuruSdk \
-            --alias:src/utils/txConfig=./tx-stub.js \  # SDK 内部の期待パスを差し替え  :contentReference[oaicite:1]{index=1}
-            --minify --outfile=docs/kuru-sdk.browser.js
 
-      # 変更があればコミット
+      # ② esbuild ― コメント無し・1ファイル入力で--outfile使用
+      - name: Bundle SDK
+        run: |
+          npx esbuild ./sdk-entry.js \
+            --bundle --format=iife --global-name=KuruSdk \
+            --alias:src/utils/txConfig=./tx-stub.js \
+            --minify --outfile=docs/kuru-sdk.browser.js \
+            --log-level=debug  # ★デバッグ出力
+
+      # ③ 差分があればコミット
       - name: Commit bundle if changed
         run: |
           git diff --quiet docs/kuru-sdk.browser.js && exit 0
