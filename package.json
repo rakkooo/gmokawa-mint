@@ -1,11 +1,11 @@
 {
   "name": "monad-mint-site",
   "private": true,
-  "type": "module",
   "version": "1.0.0",
   "description": "GitHub Pages dApp for Kuru swap + NFT mint",
+  "scripts": {},
   "dependencies": {
-    "@kuru-labs/kuru-sdk": "^0.9.0"
+    "@kuru-labs/kuru-sdk": "^0.0.47"
   },
   "devDependencies": {
     "esbuild": "^0.25.4"
