@@ -3,7 +3,7 @@
   "version": "0.0.1",
   "private": true,
   "dependencies": {
-    "@kuru-labs/kuru-sdk": "^0.0.47",
+    "@kuru-labs/kuru-sdk": "^0.0.45",
     "ethers": "^5.7.2"
   },
   "devDependencies": {
