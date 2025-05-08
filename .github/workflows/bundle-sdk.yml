@@ -1,11 +1,10 @@
-# .github/workflows/bundle-sdk.yml
 name: bundle-sdk
 on:
   push:
     branches: [main]
 
 permissions:
-  contents: write          # 自動コミット用
+  contents: write   # 自動コミットで必要
 
 jobs:
   build:
@@ -13,20 +12,18 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
-        with: { node-version: 18 }   # LTS :contentReference[oaicite:3]{index=3}
+        with: { node-version: 18 }   # LTS, npm v10 相当  :contentReference[oaicite:0]{index=0}
 
-      - run: npm ci                  # 依存解決
-
-      # --- ① Kuru SDK を IIFE 形式でバンドル ---
+      # SDK をブラウザ用 IIFE に最小化して docs/ へ配置
       - name: Bundle Kuru SDK
         run: |
           echo "export default () => ({to:'0x116a9f35a402a2d34457bd72026c7f722d9d6333',gasLimit:700000});" > tx-stub.js
           npx esbuild $(npm root)/@kuru-labs/kuru-sdk/dist/index.js \
             --bundle --format=iife --global-name=KuruSdk \
-            --alias:src/utils/txConfig=./tx-stub.js \
+            --alias:src/utils/txConfig=./tx-stub.js \  # SDK 内部の期待パスを差し替え  :contentReference[oaicite:1]{index=1}
             --minify --outfile=docs/kuru-sdk.browser.js
 
-      # --- ② 差分があればコミット ---
+      # 変更があればコミット
       - name: Commit bundle if changed
         run: |
           git diff --quiet docs/kuru-sdk.browser.js && exit 0
