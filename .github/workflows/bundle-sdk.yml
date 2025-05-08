@@ -4,7 +4,7 @@ on:
     branches: [main]
 
 permissions:
-  contents: write        # 自動コミット用
+  contents: write
 
 jobs:
   build:
@@ -14,24 +14,21 @@ jobs:
       - uses: actions/setup-node@v4
         with: { node-version: 18 }
 
-      # --- ① エントリと stub を生成 ---
-      - name: Prepare entry file
-        run: |
+      # ①――エントリーと stub を 1 ファイルずつに固定
+      - run: |
           echo "import * as S from '@kuru-labs/kuru-sdk'; export default S;" > sdk-entry.js
           echo "export default () => ({to:'0x116a9f35a402a2d34457bd72026c7f722d9d6333',gasLimit:700000});" > tx-stub.js
 
-      # --- ② esbuild で IIFE 化 ---
-      - name: Bundle Kuru SDK
-        run: |
+      # ②――複数入力を避けて --outfile で IIFE 出力（esbuild #2890 回避）:contentReference[oaicite:0]{index=0}
+      - run: |
           npx esbuild sdk-entry.js \
             --bundle --format=iife --global-name=KuruSdk \
             --alias:src/utils/txConfig=./tx-stub.js \
             --minify --outfile=docs/kuru-sdk.browser.js \
             --log-level=debug
 
-      # --- ③ 差分コミット ---
-      - name: Commit bundle if changed
-        run: |
+      # ③――差分のみコミット
+      - run: |
           git diff --quiet docs/kuru-sdk.browser.js && exit 0
           git config user.name  github-actions
           git config user.email github-actions@github.com
