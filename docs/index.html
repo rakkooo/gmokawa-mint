@@ -1,37 +1,21 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ja">
 <head>
-  <meta charset="UTF-8" />
-  <title>Monad NFT Mint & Swap</title>
+  <meta charset="utf-8" />
+  <title>Monad Swap + Mint Demo</title>
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-
-  <!-- Styles -->
-  <link rel="stylesheet" href="styles.css" />
-
-  <!-- ethers.js v5 (UMD) ➜ SDK も v5 依存 :contentReference[oaicite:2]{index=2} -->
-  <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
-
-  <!-- browser バンドルした Kuru SDK（CI が生成）-->
-  <script defer src="kuru-sdk.browser.js"></script>
-
-  <!-- App Logic -->
-  <script defer src="script.js"></script>
 </head>
 <body>
-  <header>
-    <h1>Monad NFT Mint&nbsp;&amp;&nbsp;Swap</h1>
-    <div id="walletStatus" class="wallet-status">Wallet not connected</div>
-    <button id="connectWalletBtn" class="connect-button">Connect Wallet</button>
-  </header>
+  <h1>Swap & Mint</h1>
 
-  <main>
-    <section class="mint-container">
-      <h2>Mint + Buy 1 MON</h2>
-      <p>Minted: <span id="mintedSoFar">--</span> / 5000</p>
-      <button id="mintBtn" class="mint-button" disabled>Mint &amp; Buy</button>
-    </section>
-  </main>
+  <p id="walletStatus">Not Connected</p>
+  <p>Minted so far: <span id="mintedSoFar">-</span></p>
 
-  <footer>© 2025 C's Family</footer>
+  <button id="connectWalletBtn">Connect Wallet</button>
+  <button id="mintBtn" disabled>Mint & Buy</button>
+
+  <!-- 自動生成バンドル -->
+  <script src="kuru-sdk.browser.js"></script>
+  <script src="app.bundle.js"></script>
 </body>
 </html>
