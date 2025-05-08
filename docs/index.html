@@ -23,10 +23,17 @@
 
   <footer><p>© 2025 C's Family</p></footer>
 
-  <!-- ethers v5 UMD ―― CDN で読み込み -->
+  <!-- Node のグローバルをダミー定義（SDK v0.0.45 が参照） -->
+  <script>
+    window.global  = window;
+    window.process = { env:{} };
+    window.require = () => ({});
+  </script>
+
+  <!-- ethers v5（SDK v0.0.45 が依存） -->
   <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
 
-  <!-- アプリ本体（下で定義） -->
+  <!-- アプリ本体 -->
   <script type="module" src="script.js"></script>
 </body>
 </html>
