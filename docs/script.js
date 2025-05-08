@@ -1,109 +1,91 @@
-/**************  Config  **************/
-const RPC_URL  = "https://testnet-rpc.monad.xyz";
-const CHAIN_ID = 10143;
-const CHAIN_HEX= "0x279F";                 // 10143
-const MARKET   = "0x116a9f35a402a2d34457bd72026c7f722d9d6333";
-const RELAY    = "0x36C99a9C28C728852816c9d2A5Ae9267b66c61B5";
-const NFT      = "0x3B85eE467938ca59ea22Fd63f505Ce8103ABb4B3";
-const SIZE_MON = "1";
+/********  Config & DOM  ********/
+const RPC_URL="https://testnet-rpc.monad.xyz";
+const CHAIN_HEX="0x279F";                       // 10143
+const MARKET  ="0x116a9f35a402a2d34457bd72026c7f722d9d6333";
+const RELAY   ="0x36C99a9C28C728852816c9d2A5Ae9267b66c61B5";
+const NFT     ="0x3B85eE467938ca59ea22Fd63f505Ce8103ABb4B3";
+const SIZE    ="1";            // MON
+const $=id=>document.getElementById(id);
+const rpcProv=new ethers.providers.JsonRpcProvider(RPC_URL);
 
-/**************  DOM refs  **************/
-const $      = (id)=>document.getElementById(id);
-const btnC   = $("connectWalletBtn");
-const btnM   = $("mintBtn");
-const lblW   = $("walletStatus");
-const lblCnt = $("mintedSoFar");
+/********  状態  ********/
+let walletProv, signer, relay;
 
-/**************  Providers  **************/
-const rpcProvider = new ethers.providers.JsonRpcProvider(RPC_URL); // 読み取り専用
-let walletProvider, signer, relay;
-
-/**************  初回：ミント済数  **************/
+/********  初期表示  ********/
 (async()=>{
-  const nftAbi = ["function totalSupply() view returns(uint256)"];
-  const erc721 = new ethers.Contract(NFT, nftAbi, rpcProvider);
-  lblCnt.textContent = (await erc721.totalSupply()).toString();
+  const nft=new ethers.Contract(NFT,["function totalSupply() view returns(uint256)"],rpcProv);
+  $("mintedSoFar").textContent=(await nft.totalSupply()).toString();
 })();
 
-/**************  Connect  **************/
-btnC.onclick = async ()=>{
-  if(!window.ethereum){ alert("Install MetaMask"); return; }
+/********  ウォレット接続  ********/
+$("connectWalletBtn").onclick=async()=>{
+  if(!window.ethereum) { alert("Install MetaMask"); return; }
 
-  /* ① チェーン切替 → 未登録なら add */
-  try{
-    await ethereum.request({method:"wallet_switchEthereumChain",params:[{chainId:CHAIN_HEX}]});
-  }catch(e){
-    if(e.code===4902){
-      await ethereum.request({
-        method:"wallet_addEthereumChain",
-        params:[{
-          chainId: CHAIN_HEX,
-          chainName:"Monad Testnet",
-          rpcUrls:[RPC_URL],
-          nativeCurrency:{name:"Monad",symbol:"MON",decimals:18}, // 数値 18 で MetaMask バグ回避 :contentReference[oaicite:5]{index=5}
-          blockExplorerUrls:["https://testnet.monadexplorer.com"]
-        }]
-      });
-    }else{ console.error(e); return; }
-  }
+  /* 1) 既存 → switch, 無ければ add (MetaMask 推奨フロー) :contentReference[oaicite:2]{index=2} */
+  try{ await ethereum.request({method:"wallet_switchEthereumChain",params:[{chainId:CHAIN_HEX}]}); }
+  catch(e){ if(e.code===4902){
+      await ethereum.request({method:"wallet_addEthereumChain",params:[{
+        chainId:CHAIN_HEX, chainName:"Monad Testnet", rpcUrls:[RPC_URL],
+        nativeCurrency:{name:"Monad",symbol:"MON",decimals:18}, // decimals は数値必須 :contentReference[oaicite:3]{index=3}
+        blockExplorerUrls:["https://testnet.monadexplorer.com"]
+      }]});} else{ console.error(e); return; }}
 
-  /* ② アカウント要求 */
-  const [acct] = await ethereum.request({method:"eth_requestAccounts"});
-  lblW.textContent = `Connected: ${acct.slice(0,6)}…${acct.slice(-4)}`;
-
-  /* ③ Provider & Contracts */
-  walletProvider = new ethers.providers.Web3Provider(window.ethereum,"any");
-  signer         = walletProvider.getSigner();
-  relay          = new ethers.Contract(RELAY,
-    ["function forwardAndMint(address,bytes,address) payable returns(uint256)",
-     "event ForwardAndMint(address,address,uint256,uint256)"],
-    signer);
-
-  btnM.disabled = false;
+  const [account]=await ethereum.request({method:"eth_requestAccounts"});
+  $("walletStatus").textContent=`Connected: ${account.slice(0,6)}…${account.slice(-4)}`;
+  walletProv=new ethers.providers.Web3Provider(window.ethereum,"any");
+  signer=walletProv.getSigner();
+  relay=new ethers.Contract(RELAY,[
+      "function forwardAndMint(address,bytes,address) payable returns(uint256)",
+      "event ForwardAndMint(address,address,uint256,uint256)"],signer);
+  $("mintBtn").disabled=false;
 };
 
-/**************  unsigned Market TX  **************/
+/********  マーケット TX を安全にキャプチャ  ********/
 async function buildMarketTx(){
-  let marketParams;
+  const params=await KuruSdk.ParamFetcher.getMarketParams(rpcProv,MARKET);
+  console.table(params);
+  let captured, calls=[];
+  const orig=signer.sendTransaction.bind(signer);
+
+  signer.sendTransaction=async(tx)=>{
+    calls.push(tx);                             // すべて保存
+    return {hash:"0x0",wait:async()=>({status:1})};
+  };
+
   try{
-    marketParams = await KuruSdk.ParamFetcher.getMarketParams(rpcProvider, MARKET);
-    console.table(marketParams);
-  }catch(err){
-    console.error("ParamFetcher error:", err); throw err;
+    await KuruSdk.IOC.placeMarket(
+      signer,MARKET,params,
+      {size:SIZE,minAmountOut:"0",isBuy:true,fillOrKill:true,approveTokens:true,isMargin:false}
+    );
+  }finally{
+    signer.sendTransaction=orig;               // 必ず戻す
   }
 
-  let captured;
-  const origSend = signer.sendTransaction.bind(signer);
-  signer.sendTransaction = async(tx)=>{ captured=tx; return {hash:"0x0",wait:async()=>({status:1})}; };
+  /* approve と swap の 2Tx が入る場合アドレスで判別 */
+  captured=calls.reverse().find(tx=>tx.to.toLowerCase()===MARKET.toLowerCase());
+  if(!captured) throw new Error("placeMarket did not return a swap TX; captured="+JSON.stringify(calls));
 
-  await KuruSdk.IOC.placeMarket(
-    signer, MARKET, marketParams,
-    { size:SIZE_MON, minAmountOut:"0",
-      isBuy:true, fillOrKill:true, approveTokens:true, isMargin:false }
-  );
-
-  signer.sendTransaction = origSend;
+  console.log("captured TX:",captured);
   return captured;
 }
 
-/**************  Mint + Swap  **************/
-btnM.onclick = async ()=>{
+/********  Mint + Swap  ********/
+$("mintBtn").onclick=async()=>{
   try{
-    btnM.disabled=true; btnM.textContent="Sending…";
-    const u = await buildMarketTx();
+    $("mintBtn").disabled=true;$("mintBtn").textContent="Sending…";
+    const u=await buildMarketTx();                 // {to,data,value}
+    if(!u.data) throw new Error("captured.data is undefined");
 
-    const tx = await relay.forwardAndMint(
-      u.to, u.data, await signer.getAddress(), { value: u.value||0 }
-    );
-    btnM.textContent="Pending…";
-    const rc = await tx.wait();
-    const id = ethers.BigNumber.from(rc.logs[rc.logs.length-1].topics[3]).toString();
-    alert("✅ Minted! tokenId = "+id);
-    lblCnt.textContent = (+lblCnt.textContent.split(" ")[0])+1;
+    const tx=await relay.forwardAndMint(u.to,u.data,await signer.getAddress(),{value:u.value||0});
+    console.log("relay tx:",tx.hash);
+    $("mintBtn").textContent="Pending…";
+    const rc=await tx.wait();
+    const id=ethers.BigNumber.from(rc.logs.slice(-1)[0].topics[3]).toString();
+    alert("✅ Minted! tokenId="+id);
+    $("mintedSoFar").textContent=String(+$("mintedSoFar").textContent+1);
   }catch(e){
-    console.error("Relay Error:", e);
-    alert(e.data?.message || e.message || "Tx failed");
+    console.error("Relay Error:",e); alert(e.data?.message||e.message);
   }finally{
-    btnM.disabled=false; btnM.textContent="Mint & Buy";
+    $("mintBtn").disabled=false;$("mintBtn").textContent="Mint & Buy";
   }
 };
