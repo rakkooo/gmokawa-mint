@@ -1,26 +1,33 @@
-/* global KuruSdk, ethers */
+/* --------------- 設定 --------------- */
 const RPC_URL   = "https://testnet-rpc.monad.xyz";
-const CHAIN_HEX = "0x279F";
+const CHAIN_HEX = "0x279F"; // chainId 10143
 const MARKET    = "0x116a9f35a402a2d34457bd72026c7f722d9d6333";
 const RELAY     = "0x36C99a9C28C728852816c9d2A5Ae9267b66c61B5";
 const NFT       = "0x3B85eE467938ca59ea22Fd63f505Ce8103ABb4B3";
-const SIZE_MON  = "1";
+const SIZE_MON  = "1";      // MON
 
 const $ = (id) => document.getElementById(id);
 const rpcProv = new ethers.providers.JsonRpcProvider(RPC_URL);
 
-let signer, relay;
-
-/* ミント済数表示 */
+/* --------------- 動的に SDK を読み込む --------------- */
+let KuruSdk;
 (async () => {
+  // esm.sh でブラウザ用にバンドル済み ESModule を取得
+  KuruSdk = await import("https://esm.sh/@kuru-labs/kuru-sdk@0.0.47?bundle");
+
+  // SDK が取れたらボタンを有効化
+  $("connectWalletBtn").disabled = false;
+
+  // ミント済数を表示
   const nft = new ethers.Contract(NFT, ["function totalSupply() view returns(uint256)"], rpcProv);
   $("mintedSoFar").textContent = (await nft.totalSupply()).toString();
-})();
+})().catch(console.error);
 
-/* ウォレット接続 */
+/* --------------- ウォレット接続 --------------- */
 $("connectWalletBtn").onclick = async () => {
   if (!window.ethereum) { alert("Install MetaMask"); return; }
 
+  // チェーンを Monad Testnet に
   try {
     await ethereum.request({ method: "wallet_switchEthereumChain", params: [{ chainId: CHAIN_HEX }] });
   } catch (e) {
@@ -41,18 +48,19 @@ $("connectWalletBtn").onclick = async () => {
   const [account] = await ethereum.request({ method: "eth_requestAccounts" });
   $("walletStatus").textContent = `Connected: ${account.slice(0,6)}…${account.slice(-4)}`;
 
-  signer = (new ethers.providers.Web3Provider(window.ethereum, "any")).getSigner();
-  relay  = new ethers.Contract(
-            RELAY,
-            ["function forwardAndMint(address,bytes,address) payable returns(uint256)",
-             "event ForwardAndMint(address indexed,address indexed,uint256,uint256)"],
-            signer);
+  // signer と Relay コントラクト
+  window.signer = (new ethers.providers.Web3Provider(window.ethereum, "any")).getSigner();
+  window.relay  = new ethers.Contract(
+                   RELAY,
+                   ["function forwardAndMint(address,bytes,address) payable returns(uint256)",
+                    "event ForwardAndMint(address indexed,address indexed,uint256,uint256)"],
+                   signer);
 
   $("mintBtn").disabled = false;
 };
 
-/* Swap TX をキャプチャ */
-async function buildMarketTx () {
+/* --------------- Market TX をキャプチャ --------------- */
+async function buildMarketTx() {
   const params = await KuruSdk.ParamFetcher.getMarketParams(rpcProv, MARKET);
 
   let captured;
@@ -62,15 +70,15 @@ async function buildMarketTx () {
   try {
     await KuruSdk.IOC.placeMarket(
       signer, MARKET, params,
-      { size: SIZE_MON, minAmountOut: "0", isBuy: true,
-        fillOrKill: true, approveTokens: true, isMargin: false });
+      { size: SIZE_MON, minAmountOut:"0", isBuy:true,
+        fillOrKill:true, approveTokens:true, isMargin:false });
   } finally { signer.sendTransaction = origSend; }
 
   if (!captured?.data) throw new Error("swap TX not captured");
   return { to: captured.to, data: captured.data, value: captured.value || ethers.BigNumber.from(0) };
 }
 
-/* Mint ＋ Swap */
+/* --------------- Mint & Buy --------------- */
 $("mintBtn").onclick = async () => {
   $("mintBtn").disabled = true; $("mintBtn").textContent = "Sending…";
   try {
