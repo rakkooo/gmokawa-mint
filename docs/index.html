@@ -23,20 +23,10 @@
 
   <footer><p>© 2025 C's Family</p></footer>
 
-  <!-- ――― ① Node 用グローバルを先にダミー定義 ――― -->
-  <script>
-    window.global  = window;         // Node polyfill
-    window.process = { env: {} };    // 一部パッケージが参照
-    window.require = () => ({});     // require() 呼び出しを無害化
-  </script>
-
-  <!-- ――― ② ethers v5 ――― -->
+  <!-- ethers v5 UMD ―― CDN で読み込み -->
   <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
 
-  <!-- ――― ③ Kuru SDK（CI が生成した docs/kuru-sdk.browser.js） ――― -->
-  <script src="kuru-sdk.browser.js"></script>
-
-  <!-- ――― ④ アプリ本体 ――― -->
-  <script src="script.js"></script>
+  <!-- アプリ本体（下で定義） -->
+  <script type="module" src="script.js"></script>
 </body>
 </html>
