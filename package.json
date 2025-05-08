@@ -3,17 +3,11 @@
   "private": true,
   "version": "1.0.0",
   "description": "GitHub Pages dApp for Kuru swap + NFT mint",
-  "scripts": {
-    "build": "node ./scripts/build.js"
-  },
+  "scripts": {},
   "dependencies": {
-    "@kuru-labs/kuru-sdk": "^0.0.47",
-    "ethers": "^5.7.2"
+    "@kuru-labs/kuru-sdk": "^0.0.47"
   },
   "devDependencies": {
     "esbuild": "^0.25.4"
-  },
-  "engines": {
-    "node": ">=20"
   }
 }
