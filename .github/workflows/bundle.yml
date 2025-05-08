@@ -17,8 +17,14 @@ jobs:
       - run: |
           echo "import * as S from '@kuru-labs/kuru-sdk'; import * as ethers from 'ethers'; window.KuruSdk=S; window.ethers=ethers;" > sdk-entry.js
           npx esbuild sdk-entry.js \
-            --bundle --format=iife --global-name=KuruSdk \
-            --packages=bundle --minify --outfile=docs/kuru-sdk.browser.js
+            --bundle \
+            --format=iife \
+            --global-name=KuruSdk \
+            --define:global=this \
+            --define:require=undefined \
+            --tree-shaking=false \
+            --minify \
+            --outfile=docs/kuru-sdk.browser.js
 
       - name: Commit docs if changed
         run: |
