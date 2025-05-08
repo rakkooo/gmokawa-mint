@@ -5,8 +5,6 @@
   <title>C's Family NFT Mint</title>
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <link rel="stylesheet" href="styles.css" />
-
-  <!-- 依存しない軽量スクリプトなら head に置いてもよいが、ここでは外す -->
 </head>
 <body>
   <header>
@@ -25,17 +23,20 @@
 
   <footer><p>© 2025 C's Family</p></footer>
 
-  <!-- ===== 依存順に並べる ===== -->
-  <!-- 1. ethers v5（SDK が依存） -->
+  <!-- ――― ① Node 用グローバルを先にダミー定義 ――― -->
+  <script>
+    window.global  = window;         // Node polyfill
+    window.process = { env: {} };    // 一部パッケージが参照
+    window.require = () => ({});     // require() 呼び出しを無害化
+  </script>
+
+  <!-- ――― ② ethers v5 ――― -->
   <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
 
-  <!-- 2. SDK + ethers をバンドルしたファイル（CI 生成） -->
+  <!-- ――― ③ Kuru SDK（CI が生成した docs/kuru-sdk.browser.js） ――― -->
   <script src="kuru-sdk.browser.js"></script>
 
-  <!-- 3. あなたのアプリ本体 -->
+  <!-- ――― ④ アプリ本体 ――― -->
   <script src="script.js"></script>
-
-  <!-- 4. エラーロガー（最後で OK） -->
-  <script src="errorReporter.js"></script>
 </body>
 </html>
