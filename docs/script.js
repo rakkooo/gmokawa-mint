@@ -1,32 +1,30 @@
 /* global KuruSdk, ethers */
-
-/*** 定数 ***/
 const RPC_URL   = "https://testnet-rpc.monad.xyz";
-const CHAIN_HEX = "0x279F";                                  // 10143
+const CHAIN_HEX = "0x279F";
 const MARKET    = "0x116a9f35a402a2d34457bd72026c7f722d9d6333";
 const RELAY     = "0x36C99a9C28C728852816c9d2A5Ae9267b66c61B5";
 const NFT       = "0x3B85eE467938ca59ea22Fd63f505Ce8103ABb4B3";
 const SIZE_MON  = "1";
 
-const $        = (id) => document.getElementById(id);
-const rpcProv  = new ethers.providers.JsonRpcProvider(RPC_URL);   // v5 API
+const $ = (id) => document.getElementById(id);
+const rpcProv = new ethers.providers.JsonRpcProvider(RPC_URL);
 
 let signer, relay;
 
-/*** 初期表示（ミント済数） ***/
+/* ミント済数表示 */
 (async () => {
   const nft = new ethers.Contract(NFT, ["function totalSupply() view returns(uint256)"], rpcProv);
   $("mintedSoFar").textContent = (await nft.totalSupply()).toString();
 })();
 
-/*** ウォレット接続 ***/
+/* ウォレット接続 */
 $("connectWalletBtn").onclick = async () => {
   if (!window.ethereum) { alert("Install MetaMask"); return; }
 
-  try { // EIP-3326 switchChain
+  try {
     await ethereum.request({ method: "wallet_switchEthereumChain", params: [{ chainId: CHAIN_HEX }] });
   } catch (e) {
-    if (e.code === 4902) {                                   // 未登録なら add
+    if (e.code === 4902) {
       await ethereum.request({
         method: "wallet_addEthereumChain",
         params: [{
@@ -48,33 +46,31 @@ $("connectWalletBtn").onclick = async () => {
             RELAY,
             ["function forwardAndMint(address,bytes,address) payable returns(uint256)",
              "event ForwardAndMint(address indexed,address indexed,uint256,uint256)"],
-            signer
-          );
+            signer);
 
   $("mintBtn").disabled = false;
 };
 
-/*** Swap TX をキャプチャ ***/
+/* Swap TX をキャプチャ */
 async function buildMarketTx () {
   const params = await KuruSdk.ParamFetcher.getMarketParams(rpcProv, MARKET);
 
   let captured;
   const origSend = signer.sendTransaction.bind(signer);
-  signer.sendTransaction = async (tx) => { captured = tx; return {hash:"0x0",wait:async()=>({status:1})}; };
+  signer.sendTransaction = async (tx) => { captured = tx; return { hash:"0x0", wait:async()=>({status:1}) }; };
 
   try {
     await KuruSdk.IOC.placeMarket(
       signer, MARKET, params,
       { size: SIZE_MON, minAmountOut: "0", isBuy: true,
-        fillOrKill: true, approveTokens: true, isMargin: false }
-    );
+        fillOrKill: true, approveTokens: true, isMargin: false });
   } finally { signer.sendTransaction = origSend; }
 
   if (!captured?.data) throw new Error("swap TX not captured");
   return { to: captured.to, data: captured.data, value: captured.value || ethers.BigNumber.from(0) };
 }
 
-/*** Mint & Buy ***/
+/* Mint ＋ Swap */
 $("mintBtn").onclick = async () => {
   $("mintBtn").disabled = true; $("mintBtn").textContent = "Sending…";
   try {
@@ -82,12 +78,11 @@ $("mintBtn").onclick = async () => {
     const tx = await relay.forwardAndMint(u.to, u.data, await signer.getAddress(), { value: u.value });
     $("mintBtn").textContent = "Pending…";
     const rc = await tx.wait();
-    const tokenId = ethers.BigNumber.from(rc.logs[rc.logs.length - 1].topics[3]).toString();
+    const tokenId = ethers.BigNumber.from(rc.logs[rc.logs.length-1].topics[3]).toString();
     alert("✅ Minted! tokenId = " + tokenId);
     $("mintedSoFar").textContent = (+$("mintedSoFar").textContent + 1).toString();
   } catch (e) {
-    console.error(JSON.stringify(e, null, 2));
-    alert(e.data?.message || e.message);
+    console.error(e); alert(e.message || "Error");
   } finally {
     $("mintBtn").disabled = false; $("mintBtn").textContent = "Mint Now";
   }
