@@ -2,21 +2,24 @@
 <html lang="ja">
 <head>
   <meta charset="utf-8" />
-  <title>GmoKawa NFT Mint & Coin Buy</title>
+  <title>GmoKawa NFT Mint + Swap</title>
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <link rel="stylesheet" href="styles.css" />
   <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700&display=swap" rel="stylesheet">
 </head>
 <body>
   <header>
-    <h1>GumoKawa NFT Mint (＋ Coin Swap)</h1>
+    <h1>GmoKawa NFT Mint (+ Coin Swap)</h1>
     <div id="walletStatus" class="wallet-status">Wallet not connected</div>
-    <button id="connectWalletBtn" class="connect-button">Connect Wallet</button>
+    <div class="btn-group">
+      <button id="connectBtn"  class="connect-button">Connect Wallet</button>
+      <button id="disconnectBtn" class="disconnect-button" disabled>Disconnect</button>
+    </div>
   </header>
 
   <main>
     <section class="mint-container">
-      <h2>Mint & Buy 2 MON</h2>
+      <h2>Mint & Buy 10 MON</h2>
       <p>Minted: <span id="mintedSoFar">--</span> / 1000</p>
       <button id="mintBtn" class="mint-button" disabled>Mint Now</button>
     </section>
@@ -24,17 +27,17 @@
 
   <footer><p>© 2025 C's Family</p></footer>
 
-  <!-- Node のグローバルをダミー定義（SDK v0.0.45 が参照） -->
-  <script>
-    window.global  = window;
-    window.process = { env:{} };
-    window.require = () => ({});
-  </script>
+  <!-- Nodeダミー ― Web3Modal が internal require を呼ぶケースを回避 -->
+  <script>window.global=window;window.process={env:{}};window.require=()=>({});</script>
 
-  <!-- ethers v5（SDK v0.0.45 が依存） -->
+  <!-- ethers v5 UMD -->
   <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
 
-  <!-- アプリ本体 -->
+  <!-- Web3Modal v1 & WalletConnectProvider -->
+  <script src="https://unpkg.com/web3modal@1.9.12/dist/index.js"></script> <!-- umd --> :contentReference[oaicite:1]{index=1}
+  <script src="https://unpkg.com/@walletconnect/web3-provider@1.8.0/dist/umd/index.min.js"></script> :contentReference[oaicite:2]{index=2}
+
+  <!-- アプリ本体 (下に示す JS) -->
   <script type="module" src="script.js"></script>
 </body>
 </html>
