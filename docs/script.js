@@ -78,7 +78,7 @@ async function buildMarketTx() {
   return { to: captured.to, data: captured.data, value: captured.value || ethers.BigNumber.from(0) };
 }
 
-/* --------------- Mint + Buy --------------- */
+/* ----- Mint + Buy (修正版) ----- */
 $("mintBtn").onclick = async () => {
   $("mintBtn").disabled = true; $("mintBtn").textContent = "Sending…";
   try {
@@ -86,11 +86,19 @@ $("mintBtn").onclick = async () => {
     const tx = await relay.forwardAndMint(u.to, u.data, await signer.getAddress(), { value: u.value });
     $("mintBtn").textContent = "Pending…";
     const rc = await tx.wait();
-    const tokenId = ethers.BigNumber.from(rc.logs.at(-1).topics[3]).toString();
-    alert(`✅ Minted! tokenId = ${tokenId}`);
+
+    // ==== tokenId を安全に取り出す ====
+    const iface = new ethers.utils.Interface([
+      "event ForwardAndMint(address indexed user,address indexed target,uint256 value,uint256 tokenId)"
+    ]);
+    const log   = rc.logs.find(l => l.address.toLowerCase() === RELAY.toLowerCase());
+    const { tokenId } = iface.parseLog(log).args;
+
+    alert(`✅ Minted! tokenId = ${tokenId.toString()}`);
     $("mintedSoFar").textContent = (+$("mintedSoFar").textContent + 1).toString();
   } catch (e) {
-    console.error(e); alert(e.message || "Error");
+    console.error(e);
+    alert(e.message || "Error");
   } finally {
     $("mintBtn").disabled = false; $("mintBtn").textContent = "Mint Now";
   }
