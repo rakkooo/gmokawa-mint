@@ -12,10 +12,10 @@ const rpcProv = new ethers.providers.JsonRpcProvider(RPC_URL);
 
 let signer, relay, KuruSdk;
 
-/* --------------- SDK ロード --------------- */
+/* --------------- SDK v0.0.45 ロード --------------- */
 (async () => {
   KuruSdk = await import("https://esm.sh/@kuru-labs/kuru-sdk@0.0.45?bundle");
-  $("connectWalletBtn").disabled = false;
+  /* Connect ボタンは最初から押せるので disabled は触らない */
 
   const nft = new ethers.Contract(NFT, ["function totalSupply() view returns(uint256)"], rpcProv);
   $("mintedSoFar").textContent = (await nft.totalSupply()).toString();
@@ -23,25 +23,24 @@ let signer, relay, KuruSdk;
 
 /* --------------- Web3Modal 設定 --------------- */
 const providerOptions = {
-  injected: {
-    package: null,
-    display: { name: "MetaMask", description: "Browser Wallet" }
+  injected:{
+    package:null,
+    display:{name:"MetaMask",description:"Browser Wallet"}
   },
-  walletconnect: {
-    package: window.WalletConnectProvider.default,
-    options: {
-      rpc: { [CHAIN_ID]: RPC_URL },
-      qrcodeModalOptions: { mobileLinks: ["metamask","trust","rainbow","argent","imtoken"] }
+  walletconnect:{
+    package:window.WalletConnectProvider.default,
+    options:{
+      rpc:{[CHAIN_ID]:RPC_URL},
+      qrcodeModalOptions:{mobileLinks:["metamask","trust","rainbow","argent","imtoken"]}
     }
   }
 };
 const web3Modal = new window.Web3Modal.default({
   cacheProvider:false,
-  providerOptions,
-  disableInjectedProvider:false
+  providerOptions
 });
 
-/* --------------- ウォレット接続 --------------- */
+/* --------------- 接続 --------------- */
 $("connectWalletBtn").onclick = async () => {
   try{
     const extProvider = await web3Modal.connect();
@@ -56,34 +55,33 @@ $("connectWalletBtn").onclick = async () => {
 
     const account = await signer.getAddress();
     $("walletStatus").textContent = `Connected: ${account.slice(0,6)}…${account.slice(-4)}`;
-    $("disconnectBtn").style.display = "inline-block";
-    $("mintBtn").disabled = false;
+    $("disconnectBtn").style.display="inline-block";
+    $("mintBtn").disabled=false;
   }catch(e){console.error(e);}
 };
 
-/* --------------- Disconnect --------------- */
+/* --------------- 切断 --------------- */
 function disconnect(){
   web3Modal.clearCachedProvider();
   signer = relay = null;
 
   $("walletStatus").textContent = "Wallet not connected";
-  $("disconnectBtn").style.display = "none";
-  $("mintBtn").disabled = true;
+  $("disconnectBtn").style.display="none";
+  $("mintBtn").disabled=true;
 }
 $("disconnectBtn").onclick = disconnect;
 
-/* --------------- Market TX をキャプチャ --------------- */
+/* --------- 以下：スワップ & ミント部は完全に以前のまま --------- */
 async function buildMarketTx(){
   const params = await KuruSdk.ParamFetcher.getMarketParams(rpcProv, MARKET);
-
   let captured;
   const orig = signer.sendTransaction.bind(signer);
-  signer.sendTransaction = async tx => { captured = tx; return { hash:"0x0", wait:async()=>({status:1}) }; };
+  signer.sendTransaction = async tx => { captured = tx; return {hash:"0x0",wait:async()=>({status:1})}; };
 
   try{
     await KuruSdk.IOC.placeMarket(
       signer, MARKET, params,
-      { size: SIZE_MON, minAmountOut:"0", isBuy:true,
+      { size:SIZE_MON, minAmountOut:"0", isBuy:true,
         fillOrKill:true, approveTokens:true, isMargin:false }
     );
   }finally{ signer.sendTransaction = orig; }
@@ -92,21 +90,21 @@ async function buildMarketTx(){
   return { to: captured.to, data: captured.data, value: captured.value || ethers.BigNumber.from(0) };
 }
 
-/* --------------- Mint + Buy --------------- */
 $("mintBtn").onclick = async () => {
-  $("mintBtn").disabled = true; $("mintBtn").textContent = "Sending…";
+  $("mintBtn").disabled=true; $("mintBtn").textContent="Sending…";
   try{
-    const u  = await buildMarketTx();
-    const tx = await relay.forwardAndMint(u.to, u.data, await signer.getAddress(), { value: u.value });
-    $("mintBtn").textContent = "Pending…";
+    const u = await buildMarketTx();
+    const tx = await relay.forwardAndMint(u.to,u.data,await signer.getAddress(),{value:u.value});
+    $("mintBtn").textContent="Pending…";
     const rc = await tx.wait();
 
-    const iface = new ethers.utils.Interface(["event ForwardAndMint(address,address,uint256,uint256)"]);
-    const log   = rc.logs.find(l => l.address.toLowerCase() === RELAY.toLowerCase());
-    const { tokenId } = iface.parseLog(log).args;
+    const iface=new ethers.utils.Interface(["event ForwardAndMint(address,address,uint256,uint256)"]);
+    const log = rc.logs.find(l=>l.address.toLowerCase()===RELAY.toLowerCase());
+    const {tokenId}=iface.parseLog(log).args;
 
-    const url = `https://testnet.monadexplorer.com/tx/${tx.hash}`;
+    const url=`https://testnet.monadexplorer.com/tx/${tx.hash}`;
     alert(`✅ Minted! tokenId=${tokenId.toString()}\nTx ➜ ${url}`);
-    $("mintedSoFar").textContent = (+$("mintedSoFar").textContent + 1).toString();
+    $("mintedSoFar").textContent=(+$("mintedSoFar").textContent+1).toString();
   }catch(e){console.error(e);alert(e.message||"Error");}
-  finally{ $("mintBtn").disabled=fa
+  finally{ $("mintBtn").disabled=false; $("mintBtn").textContent="Mint Now"; }
+};
