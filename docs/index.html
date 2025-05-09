@@ -5,7 +5,7 @@
   <title>GmoKawa NFT Mint + Swap</title>
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <link rel="stylesheet" href="styles.css" />
-  <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;700&display=swap" rel="stylesheet">
 </head>
 <body>
   <header>
@@ -13,7 +13,7 @@
     <div id="walletStatus" class="wallet-status">Wallet not connected</div>
 
     <div class="btn-group">
-      <button id="connectBtn"  class="connect-button">Connect Wallet</button>
+      <button id="connectWalletBtn"  class="connect-button">Connect Wallet</button>
       <button id="disconnectBtn" class="disconnect-button" style="display:none">Disconnect</button>
     </div>
   </header>
@@ -28,17 +28,17 @@
 
   <footer><p>© 2025 C's Family</p></footer>
 
-  <!-- Nodeダミー ― Web3Modal が internal require を呼ぶケースを回避 -->
+  <!-- Node ダミー（Web3Modal / WC が内部 require を呼ぶ対策） -->
   <script>window.global=window;window.process={env:{}};window.require=()=>({});</script>
 
-  <!-- ethers v5 UMD -->
+  <!-- ethers v5 -->
   <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
 
-  <!-- Web3Modal v1 & WalletConnectProvider -->
-  <script src="https://unpkg.com/web3modal@1.9.12/dist/index.js"></script> <!-- umd --> :contentReference[oaicite:1]{index=1}
-  <script src="https://unpkg.com/@walletconnect/web3-provider@1.8.0/dist/umd/index.min.js"></script> :contentReference[oaicite:2]{index=2}
+  <!-- Web3Modal v1 & WalletConnectProvider v1 -->
+  <script src="https://unpkg.com/web3modal@1.9.12/dist/index.js"></script>
+  <script src="https://unpkg.com/@walletconnect/web3-provider@1.8.0/dist/umd/index.min.js"></script>
 
-  <!-- アプリ本体 (下に示す JS) -->
+  <!-- アプリ本体 -->
   <script type="module" src="script.js"></script>
 </body>
 </html>
