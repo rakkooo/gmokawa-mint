@@ -1,50 +1,74 @@
-/* ------- basic layout ------- */
-*{margin:0;padding:0;box-sizing:border-box}
-body{
-  font-family:'Baloo 2', cursive, sans-serif;
-  background:#f7f7f7;
-  color:#333;
-  display:flex;
-  flex-direction:column;
-  min-height:100vh;          /* ← セミコロンを追加 */
-}
-body::before{
-  content:"";
-  position:fixed;
-  inset:0;
-  /* center / cover ← スペースが必要 */
-  background:url("./gmokawa.png") center / cover no-repeat;
-  opacity:0.3;
-  z-index:-1;
-}
-header h1, .mint-container h2{
-  font-weight:600;
-}
-header,footer{
-  background:#ccc4fc;color:#fff;text-align:center;padding:1.5rem
-}
-main{flex:1;display:flex;justify-content:center;align-items:center}
+/* ───── reset & base ───── */
+* { margin: 0; padding: 0; box-sizing: border-box; }
 
-/* ------- card ------- */
-.mint-container{
-  background:#fff;width:320px;max-width:90%;
-  padding:2rem;border-radius:8px;
-  box-shadow:0 0 10px rgba(0,0,0,.1)
+body {
+  font-family: 'Baloo 2', cursive, sans-serif;
+  background: #f7f7f7;
+  color: #333;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
 }
 
-/* ------- buttons ------- */
-button{
-  background:#ccc4fc;color:#333;border:none;
-  padding:.75rem 1.25rem;border-radius:6px;
-  font-size:1rem;cursor:pointer;transition:opacity .3s
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background: url("./gmokawa.png") center / cover no-repeat;
+  opacity: 0.3;
+  z-index: -1;
 }
-button:hover{opacity:.9}
-button[disabled]{opacity:.5;cursor:not-allowed}
-.btn-group { margin-top: 1rem; display: flex; gap: .5rem; justify-content: center; }
 
-.disconnect-button {
-  background:#ff9494;            /* 目立つ赤系 */
-  color:#fff;
+/* ───── layout ───── */
+header, footer {
+  background: #ccc4fc;
+  color: #fff;
+  text-align: center;
+  padding: 1.5rem;
 }
-/* ------- misc ------- */
-.wallet-status{margin-top:.5rem;font-size:.9rem}
+
+main {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* ───── card ───── */
+.mint-container {
+  background: #fff;
+  width: 320px;
+  max-width: 90%;
+  padding: 2rem;
+  border-radius: 8px;
+  box-shadow: 0 0 10px rgba(0,0,0,.1);
+}
+
+header h1,
+.mint-container h2 { font-weight: 600; }
+
+/* ───── buttons ───── */
+button {
+  border: none;
+  padding: .75rem 1.25rem;
+  border-radius: 6px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: opacity .3s;
+}
+
+button:hover        { opacity: .9; }
+button[disabled]    { opacity: .5; cursor: not-allowed; }
+
+.connect-button     { background: #5ec4ff; color: #fff; }
+.disconnect-button  { background: #ff9494; color: #fff; }
+
+.btn-group {
+  margin-top: 1rem;
+  display: flex;
+  gap: .5rem;
+  justify-content: center;
+}
+
+/* ───── misc ───── */
+.wallet-status { margin-top: .5rem; font-size: .9rem; }
