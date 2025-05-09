@@ -12,9 +12,10 @@
     <h1>GmoKawa NFT Mint (+ Coin Swap)</h1>
     <div id="walletStatus" class="wallet-status">Wallet not connected</div>
 
+    <!-- ▼ disabled 属性を絶対に入れない！ -->
     <div class="btn-group">
       <button id="connectWalletBtn" class="connect-button">Connect Wallet</button>
-      <button id="disconnectBtn" class="disconnect-button" style="display:none">Disconnect</button>
+      <button id="disconnectBtn"  class="disconnect-button" style="display:none">Disconnect</button>
     </div>
   </header>
 
@@ -28,7 +29,7 @@
 
   <footer><p>© 2025 C's Family</p></footer>
 
-  <!-- Node ダミー（WalletConnect が内部 require を呼ぶ対策）-->
+  <!-- Node ダミー（WalletConnect が内部 require を呼ぶ場合に備える） -->
   <script>window.global=window;window.process={env:{}};window.require=()=>({});</script>
 
   <!-- ethers v5 -->
@@ -38,4 +39,7 @@
   <script src="https://unpkg.com/web3modal@1.9.12/dist/index.js"></script>
   <script src="https://unpkg.com/@walletconnect/web3-provider@1.8.0/dist/umd/index.min.js"></script>
 
-  <!-- アプリ本体
+  <!-- アプリ本体 -->
+  <script type="module" src="script.js"></script>
+</body>
+</html>
