@@ -2,9 +2,9 @@
 const RPC_URL   = "https://testnet-rpc.monad.xyz";
 const CHAIN_HEX = "0x279F"; // Monad Testnet
 const MARKET    = "0xa4c519b1d2b28ae33a9d3d345c676725e642c99d";
-const RELAY     = "0x36C99a9C28C728852816c9d2A5Ae9267b66c61B5";
-const NFT       = "";
-const SIZE_MON  = "1";
+const RELAY     = "0x1f12d8349c9101b304949d8b285b49aDe76e38E7";
+const NFT       = "0x66fb1b5733A1A719e57022247A1CD9F4Ed73B1FB";
+const SIZE_MON  = "10";
 
 const $ = id => document.getElementById(id);
 const rpcProv = new ethers.providers.JsonRpcProvider(RPC_URL);
