@@ -37,14 +37,14 @@ async function init() {
     theme: "dark"
   });
 
-  $("#connectBtn").disabled   = false;
+  document.getElementById("connectBtn").disabled = false;
 
   const nft = new ethers.Contract(NFT, ["function totalSupply() view returns(uint256)"], rpcProv);
   $("#mintedSoFar").textContent = (await nft.totalSupply()).toString();
 }
 
 /* ========== connect / disconnect ========== */
-$("#connectBtn").onclick = async () => {
+document.getElementById("connectBtn").onclick = async () => {
   try {
     extProvider = await web3Modal.connect();                         // MetaMask or WalletConnect :contentReference[oaicite:5]{index=5}
     extProvider.on("disconnect", () => disconnect());
@@ -64,7 +64,7 @@ $("#connectBtn").onclick = async () => {
   } catch (e) { console.error(e); }
 };
 
-$("#disconnectBtn").onclick = disconnect;
+document.getElementById("disconnectBtn").onclick = disconnect;
 
 function disconnect() {
   if (web3Modal) web3Modal.clearCachedProvider();                    // 清掃 :contentReference[oaicite:6]{index=6}
@@ -112,7 +112,7 @@ $("#mintBtn").onclick = async () => {
     const { tokenId } = iface.parseLog(log).args;                    // :contentReference[oaicite:7]{index=7}
 
     const link = `https://testnet.monadexplorer.com/tx/${tx.hash}`;
-    alert(`✅ Minted! tokenId = ${tokenId.toString()}\nTx ▶ ${link}`);
+    alert(`✅ Minted! tokenId = ${tokenId.toString()}\nExplorer ➜ ${link}`);
 
     $("#mintedSoFar").textContent = (+$("#mintedSoFar").textContent + 1).toString();
   } catch (e) { console.error(e); alert(e.message || "Error"); }
