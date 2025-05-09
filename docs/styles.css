@@ -1,8 +1,7 @@
-/* ───── reset & base ───── */
 *{margin:0;padding:0;box-sizing:border-box}
 
 body{
-  font-family:'Baloo 2', cursive, sans-serif;
+  font-family:'Baloo 2',cursive,sans-serif;
   background:#f7f7f7;
   color:#333;
   display:flex;
@@ -14,12 +13,11 @@ body::before{
   content:"";
   position:fixed;
   inset:0;
-  background:url("./gmokawa.png") center / cover no-repeat;
+  background:url("./gmokawa.png") center/cover no-repeat;
   opacity:.3;
   z-index:-1;
 }
 
-/* ───── layout ───── */
 header,footer{
   background:#ccc4fc;
   color:#fff;
@@ -27,14 +25,8 @@ header,footer{
   padding:1.5rem;
 }
 
-main{
-  flex:1;
-  display:flex;
-  justify-content:center;
-  align-items:center;
-}
+main{flex:1;display:flex;justify-content:center;align-items:center}
 
-/* ───── card ───── */
 .mint-container{
   background:#fff;
   width:320px;
@@ -46,7 +38,6 @@ main{
 
 header h1,.mint-container h2{font-weight:600}
 
-/* ───── buttons ───── */
 button{
   border:none;
   padding:.75rem 1.25rem;
@@ -55,18 +46,12 @@ button{
   cursor:pointer;
   transition:opacity .3s;
 }
-button:hover        {opacity:.9}
-button[disabled]    {opacity:.5;cursor:not-allowed}
+button:hover{opacity:.9}
+button[disabled]{opacity:.5;cursor:not-allowed}
 
-.connect-button    {background:#5ec4ff;color:#fff}
-.disconnect-button {background:#ff9494;color:#fff}
+.connect-button   {background:#5ec4ff;color:#fff}
+.disconnect-button{background:#ff9494;color:#fff}
 
-.btn-group{
-  margin-top:1rem;
-  display:flex;
-  gap:.5rem;
-  justify-content:center;
-}
+.btn-group{margin-top:1rem;display:flex;gap:.5rem;justify-content:center}
 
-/* ───── misc ───── */
 .wallet-status{margin-top:.5rem;font-size:.9rem}
