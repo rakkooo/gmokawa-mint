@@ -40,6 +40,11 @@ button{
 }
 button:hover{opacity:.9}
 button[disabled]{opacity:.5;cursor:not-allowed}
+.btn-group { margin-top: 1rem; display: flex; gap: .5rem; justify-content: center; }
 
+.disconnect-button {
+  background:#ff9494;            /* 目立つ赤系 */
+  color:#fff;
+}
 /* ------- misc ------- */
 .wallet-status{margin-top:.5rem;font-size:.9rem}
