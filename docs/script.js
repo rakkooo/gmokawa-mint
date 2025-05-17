@@ -27,7 +27,7 @@ const providerOptions = {
       name:"MetaMask",
       description:"Browser Wallet",
       /* Fox SVG to avoid ruby icon */                       // :contentReference[oaicite:1]{index=1}
-      logo:"https://raw.githubusercontent.com/MetaMask/brand-resources/master/SVG/metamask-fox.svg"
+      logo:"metamask-fox.svg"
     }
   },
   walletconnect:{
